@@ -1,6 +1,6 @@
 import express, { type Request, type Response } from "express"
 import cors from "cors"
-//import { tasksRouter } from "./routes/tasks.routes.js"
+import { tasksRouter } from "./routes/tasks.routes.js"
 import "dotenv/config"
 
 
@@ -14,7 +14,7 @@ app.use(express.json())
 
 
 //Tasks Router
-//app.use("/api/tasks", tasksRouter)
+app.use("/api/tasks", tasksRouter)
 
 //not found 404
 app.use((req:Request, res:Response<{message:string}>):void => {
