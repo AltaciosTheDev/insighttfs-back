@@ -1,5 +1,5 @@
 import express, { Router } from "express"
-import { postTask, deleteTask, getTasks } from "../controllers/tasks.controllers.js"
+import { postTask, deleteTask, getTasks, updateTask } from "../controllers/tasks.controllers.js"
 
 export const tasksRouter:Router = express.Router()
 
@@ -9,4 +9,6 @@ tasksRouter.get("/", getTasks)
 tasksRouter.post("/", postTask)
 //DELETE task  
 tasksRouter.delete("/:id", deleteTask)
+//PUT task
+tasksRouter.put("/:id", updateTask)
 

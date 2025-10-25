@@ -1,7 +1,8 @@
 import type { Request, Response } from "express";
 // import { initialTasks } from "../lib/constants";
 //import type { Task } from "../lib/types";
-import type { Task } from '@prisma/client'; //generated from prisma, no longer needs my own 
+import { Prisma } from "@prisma/client";
+import type { Task } from "@prisma/client"; //generated from prisma, no longer needs my own
 
 import prisma from "../lib/prisma";
 
@@ -12,28 +13,32 @@ type GetTasksResponse = {
   tasks?: Task[];
 };
 
-export const getTasks = async (req: Request, res: Response<GetTasksResponse>):Promise<void> => {
-  try{
-    console.log("GET /tasks --> request received")
-    const tasks = await prisma.task.findMany()
-    console.log("Tasks fetched:", tasks)
+export const getTasks = async (
+  req: Request,
+  res: Response<GetTasksResponse>
+): Promise<void> => {
+  try {
+    console.log("GET /tasks --> request received");
+    const tasks = await prisma.task.findMany();
+    console.log("Tasks fetched:", tasks);
 
     res.status(200).json({
       message: "Tasks fetched successfully",
-      tasks
-    })
-  }
-  //If Promise fails → catch already runs. Nothing else is needed.
-  catch(err){
+      tasks,
+    });
+  } catch (err) {
+    //If Promise fails → catch already runs. Nothing else is needed.
     //can abstract to an error middleware
-    console.error("Error in GET /tasks: ", err)
-    res.status(500).json({ message: "SSE / Something went wrong gettin the tasks" });
+    console.error("Error in GET /tasks: ", err);
+    res
+      .status(500)
+      .json({ message: "SSE / Something went wrong gettin the tasks" });
   }
 };
 
-type PostTaskBody={
-  taskName:string
-}
+type PostTaskBody = {
+  taskName: string;
+};
 
 type PostTasksResponse = {
   message: string;
@@ -41,61 +46,121 @@ type PostTasksResponse = {
 };
 
 //POST task
-export const postTask = async (req: Request<{},{}, PostTaskBody, {}>, res: Response<PostTasksResponse>):Promise<void> => {
-  console.log("POST /task --> request received")
+export const postTask = async (
+  req: Request<{}, {}, PostTaskBody, {}>,
+  res: Response<PostTasksResponse>
+): Promise<void> => {
+  console.log("POST /task --> request received");
 
   try {
-    const {taskName} = req.body
-    const taskCreated = await prisma.task.create({data:{
-      name: taskName
-    }})
-    console.log("Task created:", taskCreated)
+    const { taskName } = req.body;
+    const taskCreated = await prisma.task.create({
+      data: {
+        name: taskName,
+      },
+    });
+    console.log("Task created:", taskCreated);
     res.status(201).json({
       message: "Task created successfully",
-      task: taskCreated
-    })
-  //If Promise fails → catch already runs. Nothing else is needed.
-
+      task: taskCreated,
+    });
+    //If Promise fails → catch already runs. Nothing else is needed.
+  } catch (err) {
+    console.error("Error in POST /task: ", err);
+    res
+      .status(500)
+      .json({ message: "SSE / Something went wrong creating the task" });
   }
-  catch(err){
-    console.error("Error in POST /task: ", err)
-    res.status(500).json({ message: "SSE / Something went wrong creating the task" })
-  }
-
 };
 
 type deleteTaskParams = {
-  id: string
-}
+  id: string;
+};
 
 type deleteTaskResponse = {
   message: string;
   task?: Task;
-}
+};
 
 //DELETE task
-export const deleteTask = async (req: Request<deleteTaskParams, {}, {}, {}>, res: Response) => {
-  console.log("DELETE /task --> request received")
-  const {id} = req.params
-  try{
+export const deleteTask = async (
+  req: Request<deleteTaskParams, {}, {}, {}>,
+  res: Response
+) => {
+  console.log("DELETE /task --> request received");
+  const { id } = req.params;
+  try {
     const deletedTask = await prisma.task.delete({
       where: {
-        id: JSON.parse(id)
-      }
-    })
-    console.log("Task deleted:", deletedTask)
+        id: JSON.parse(id),
+      },
+    });
+    console.log("Task deleted:", deletedTask);
     res.status(200).json({
       message: "Task deleted successfully",
-      task: deletedTask
-    })
+      task: deletedTask,
+    });
+  } catch (err: unknown) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2025") {
+        return res.status(404).json({
+          message: `Task with id ${id} not found`,
+        });
+      }
+    }
+    console.error("Error in DELETE /task: ", err);
+    res.status(500).json({ message: "Something went wrong deleting the task" });
   }
-  catch(err){
-    console.error("Error in DELETE /task: ", err)
-    res.status(500).json({message:"Something went wrong deleting the task"})
-  }
+};
 
+type PutTaskBody = {
+  taskName?: string;
+  isCompleted: boolean;
+};
+
+type PutTaskParams = {
+  id: string;
+};
+
+type PutTasksResponse = {
+  message: string;
+  task?: Task;
+};
+
+//TOGGLE task
+export const updateTask = async (
+  req: Request<PutTaskParams, {}, PutTaskBody, {}>,
+  res: Response
+) => {
+  console.log("PUT / task --> request received");
+  const { id } = req.params;
+  const { isCompleted } = req.body;
+  console.log(isCompleted);
+  console.log(id);
+
+  try {
+    const updatedTask = await prisma.task.update({
+      where: {
+        id: JSON.parse(id),
+      },
+      data: {
+        isCompleted: isCompleted,
+      },
+    });
+    console.log("Task updated:", updatedTask);
+    res
+      .status(200)
+      .json({ message: "Task updated successfully", task: updatedTask });
+  } catch (err: unknown) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2025") {
+        return res.status(404).json({
+          message: `Task with id ${id} not found`,
+        });
+      }
+    }
+    res.status(500).json({ message: "Something went wrong deleting the task" });
+  }
 };
 
 //GET specific task
-
-//TOGGLE task
