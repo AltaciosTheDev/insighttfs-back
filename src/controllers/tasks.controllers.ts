@@ -18,8 +18,16 @@ export const getTasks = async (
   res: Response<GetTasksResponse>
 ): Promise<void> => {
   try {
+    const { userId } = req;
+    if (!userId) {
+      throw Error("No user ID found");
+    }
     console.log("GET /tasks --> request received");
-    const tasks = await prisma.task.findMany();
+    const tasks = await prisma.task.findMany({
+      where: {
+        userId: userId,
+      },
+    });
     console.log("Tasks fetched:", tasks);
 
     res.status(200).json({
@@ -53,10 +61,17 @@ export const postTask = async (
   console.log("POST /task --> request received");
 
   try {
+    const { userId } = req;
     const { taskName } = req.body;
+
+    if (!userId) {
+      throw Error("No user ID found");
+    }
+
     const taskCreated = await prisma.task.create({
       data: {
         name: taskName,
+        userId: userId,
       },
     });
     console.log("Task created:", taskCreated);

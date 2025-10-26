@@ -2,11 +2,7 @@ import express, { type Request, type Response } from "express"
 import cors from "cors"
 import { tasksRouter } from "./routes/tasks.routes.js"
 import "dotenv/config"
-import { validateToken, type jwtValidationResponse } from "@kinde/jwt-validator";
-import { decodeJwt } from "jose"; // npm i jose
-
-
-
+import { authMiddlware } from "./middleware/auth.middleware.js"
 
 //initialize app
 const app = express()
@@ -15,10 +11,8 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 
-
-
 //Tasks Router
-app.use("/api/tasks", tasksRouter)
+app.use("/api/tasks",authMiddlware ,tasksRouter)
 
 //not found 404
 app.use((req:Request, res:Response<{message:string}>):void => {
