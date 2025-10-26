@@ -129,8 +129,8 @@ export const deleteTask = async (
 };
 
 type PutTaskBody = {
-  taskName?: string;
-  isCompleted: boolean;
+  name?: string;
+  isCompleted?: boolean;
 };
 
 type PutTaskParams = {
@@ -149,8 +149,23 @@ export const updateTask = async (
 ) => {
   console.log("PUT / task --> request received");
   const { id } = req.params;
-  const { isCompleted } = req.body;
-  console.log(isCompleted);
+
+  // Build the update object safely
+  let dataObjForUpdate: PutTaskBody = {};
+
+  if ("isCompleted" in req.body) {
+    const { isCompleted } = req.body;
+    console.log(isCompleted);
+    dataObjForUpdate = { isCompleted };
+  }
+  if (req.body.name) {
+    const { name } = req.body;
+    console.log(name);
+    dataObjForUpdate = {
+      name,
+    };
+  }
+
   console.log(id);
 
   try {
@@ -158,9 +173,7 @@ export const updateTask = async (
       where: {
         id: JSON.parse(id),
       },
-      data: {
-        isCompleted: isCompleted,
-      },
+      data: dataObjForUpdate,
     });
     console.log("Task updated:", updatedTask);
     res
@@ -174,7 +187,7 @@ export const updateTask = async (
         });
       }
     }
-    res.status(500).json({ message: "Something went wrong deleting the task" });
+    res.status(500).json({ message: "Something went wrong updating the task" });
   }
 };
 
