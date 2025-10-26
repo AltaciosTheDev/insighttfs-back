@@ -2,6 +2,10 @@ import express, { type Request, type Response } from "express"
 import cors from "cors"
 import { tasksRouter } from "./routes/tasks.routes.js"
 import "dotenv/config"
+import { validateToken, type jwtValidationResponse } from "@kinde/jwt-validator";
+import { decodeJwt } from "jose"; // npm i jose
+
+
 
 
 //initialize app
