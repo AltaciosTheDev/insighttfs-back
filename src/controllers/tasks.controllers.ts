@@ -7,7 +7,6 @@ import type { Task } from "@prisma/client"; //generated from prisma, no longer n
 import prisma from "../lib/prisma";
 
 //GET tasks
-
 type GetTasksResponse = {
   message: string;
   tasks?: Task[];

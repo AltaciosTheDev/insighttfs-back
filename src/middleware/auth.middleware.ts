@@ -15,14 +15,22 @@ export const authMiddlware = async (
   const authHeader = req.headers.authorization;
 
   //FIRST to token or incorrect token
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+  if (!authHeader) {
     console.log("No token found");
-    return res.status(401).json({ message: "No token provided" });
+    return res.status(401).json({ message: "No Auth Header Provided" });
+  }
+  //SECOND invalid token format 
+  if (!authHeader.startsWith("Bearer ")) {
+    console.log("No token found");
+    return res.status(401).json({ message: "Invalid token format" });
   }
 
-  //SECOND get token
+  //THIRD get token
   const token = authHeader.split(" ")[1]; //will return token and discard Bearer word
-  if (!token) throw new Error("No token found");
+  if (!token) {
+    console.log("No token only bearer word")
+    return res.status(401).json({ message: "No token found" });
+  }
 
   console.log(`Token extracted, ${token}`);
 
@@ -32,18 +40,19 @@ export const authMiddlware = async (
       token,
       domain: "https://altacios.kinde.com",
     });
-    //{valid:boolean, message:"Token is valid"/"JWK not found"}
+    //{valid:boolean, message:"Token is valid"/"JWT not found"}
     if (!validationResult.valid) {
       console.log(validationResult.message);
-      return res.status(403).json({ message: "Invalid token" });
+      return res.status(403).json({ message: "Invalid JWT" });
     }
     console.log(validationResult.message);
-    //FOURTH decode token to get Kinde userId
+    //FOURTH decode token to get Kinde userId JOSE 
     const claims = decodeJwt(token);
     console.log("decoded jwt:", claims);
 
     if (!claims.sub) {
-      throw new Error("Token is missing sub (user id)");
+      return res.status(403).json({ message: "NO user FOUND" });
+
     }
 
     //FIFTH add to req
