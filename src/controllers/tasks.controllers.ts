@@ -63,6 +63,13 @@ export const postTask = async (
     const { userId } = req;
     const { taskName } = req.body;
 
+    if (typeof taskName !== "string" || !taskName.trim()) {
+       res.status(400).json({
+        message: "taskName is required and must be a non-empty string",
+      });
+      return
+    }
+
     if (!userId) {
       throw Error("No user ID found");
     }
